@@ -32,7 +32,7 @@ To be fleshed out.
 2. Set up a Clojure project using [Leiningen](http://leiningen.org) or [Boot](https://github.com/boot-clj/boot#boot--).
 
 3. Add this project as a dependency:
-   [![Clojars Project](http://clojars.org/ola-clojure/latest-version.svg)](http://clojars.org/ola-clojure)
+   [![Clojars Project](https://clojars.org/ola-clojure/latest-version.svg)](https://clojars.org/ola-clojure)
 
 ## Status
 
