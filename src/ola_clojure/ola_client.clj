@@ -5,7 +5,7 @@
   (:require [flatland.protobuf.core :refer [protobuf protobuf-load protobuf-dump]]
             [clojure.java.io :as io]
             [clojure.core.cache :as cache]
-            [clojure.core.async :refer [chan go go-loop <! >!! close!]]
+            [clojure.core.async :refer [chan go go-loop <! <!! >!! close!]]
             [clojure.stacktrace :refer [root-cause]]
             [ola-clojure.rpc-messages :refer [RpcMessage]]
             [taoensso.timbre :as timbre])
@@ -143,8 +143,8 @@
       (timbre/warn e "Problem writing message to olad server")
       (when first-try
         (timbre/info "Reopening connection and retrying...")
-        (swap! connection connect-server)
-        (write-safely-internal header-and-message false connection)))))
+        (when (swap! connection connect-server)
+          (write-safely-internal header-and-message false connection))))))
 
 (defn- write-safely
   "Try to write a message to the olad server, reopen connection and
@@ -229,11 +229,9 @@
               (.putInt (.intValue (build-header (count request-bytes))))
               (.flip)
               (.get header-bytes))
-            (or
-              (write-safely header-bytes request-bytes connection)
-              (handle-failure request request-cache
-                              (str "Unable to write " name " message to OLA."
-                                   (when-not @connection " Is it running?")))))
+            (when-not (write-safely header-bytes request-bytes connection)
+              (handle-failure request request-cache (str "Unable to write " name " message to OLA."
+                                                         (when-not @connection " Is it running?")))))
           (recur (<! channel))))
       ;; The channel has been closed, so signal the main thread to shut down as well
       (swap! connection disconnect-server))))
@@ -254,8 +252,14 @@
     (if @connection
       ;; Run core.async loop which takes requests on the internal channel and writes them to the OLA server socket
       (channel-loop channel connection request-cache)
-      ;; We were not able to obtain a connection, so shut down.
-      (close! channel))
+      ;; We were not able to obtain a connection, so shut down, reporting failure to any queued requests.
+      (do
+        (close! channel)
+        (loop [request (<!! channel)]
+          (when-let [[name _ _ response-handler] request]
+            (handle-failure response-handler
+                            (str "Unable to write " name " message to OLA: Cannot connect, is it running?") nil)
+            (recur (<!! channel))))))
     
     ;; An ordinary loop which reads from the OLA server socket and dispatches responses to their handlers
     (while @connection
