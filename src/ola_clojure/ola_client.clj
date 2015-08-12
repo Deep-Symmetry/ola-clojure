@@ -186,8 +186,8 @@
             response-bytes (byte-array response-length)]
         (.get response-buffer response-bytes)
         (when-let [handler (:handler handler-entry)]
-          (handler {:response (protobuf-load (:response-type handler-entry) response-bytes)}))
-        (timbre/warn "Cannot find handler for response, too old?" wrapper)))
+          (handler {:response (protobuf-load (:response-type handler-entry) response-bytes)})))
+      (timbre/warn "Cannot find handler for response, too old?" wrapper))
     (catch Throwable t
       (timbre/error t "Problem delivering OLA response to handler"))))
 
