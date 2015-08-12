@@ -225,11 +225,13 @@ Other methods work in the same way, like
    {:plugin_id 22, :name "GPIO", :active true, :enabled true}]}}
 ```
 
-Or, extracting and just printing part of the response to
+Or, extracting and just printing the most important part of the
+response to
 [GetPluginDescription](https://github.com/brunchboy/ola-clojure/blob/master/resources/proto/Ola.proto#L378-L379):
 
 ```clojure
-(ola/GetPluginDescription {:plugin_id 2} #(print (get-in % [:response :description])))
+(ola/GetPluginDescription {:plugin_id 2}
+                          #(print (get-in % [:response :description])))
 ```
 
 ```
@@ -304,10 +306,61 @@ use_loopback = [true|false]
 Enable use of the loopback device.
 ```
 
+Finally, as an example of a more interesting RPC you will likely want
+to call, here is the section of Afterglow's `show` namespace which
+sends an updated set of DMX control values to one of the show's
+universes:
 
-### Connection Configuration
+```clojure
+(let [levels (get buffers universe)]
+  (ola/UpdateDmxData {:universe universe :data (ByteString/copyFrom levels)} response-handler))
+```
+
+In this example, `universe` contains the ID of a universe that the
+show is controlling, and `levels` is a Java `byte` array containing
+the desired DMX channel values for the universe. This invocation
+causes `olad` to send those values to whatever plugin and interface is
+controlling that universe.
+
+These examples, combined with the
+[Ola.proto](https://github.com/brunchboy/ola-clojure/blob/master/resources/proto/Ola.proto#L374-L402)
+specification which creates the wrapper functions, will hopefully
+enable you to figure out how to send whatever messages you need to
+`olad`.
+ 
+ ### Connection Configuration
+
+If you need to talk to `olad` on a different port or address, you can
+do so by configuring the
+[ola-client](https://github.com/brunchboy/ola-clojure/blob/master/src/ola_clojure/ola_client.clj)
+namespace which manages the connection on behalf of the RPC wrapper
+functions:
+
+```clojure
+(require '[ola-clojure.ola-client :as ola-client])
+(reset! ola-client/olad-host "172.30.246.32")
+(reset! ola-client/olad-port 9200)
+```
+
+The `ola-client` namespace also provides a `shutdown` function which
+you can call if you ever want to explicitly close the `olad` connection:
+
+```clojure
+(ola-client/shutdown)
+```
+
+There is also a `start` function to open the connection again, but
+there is no real need to call this, as the RPC wrapper functions will
+all call it if necessary.
 
 ### Logging Configuration
+
+Like Afterglow, ola-clojure uses the excellent
+[Timbre](https://github.com/ptaoussanis/timbre) logging framework. If
+you do nothing, log messages above the `debug` level will be written
+to the standard output. But you can configure it however you would
+like, as described in its
+[documentation](https://github.com/ptaoussanis/timbre#configuration).
 
 ## Status
 
