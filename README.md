@@ -64,7 +64,7 @@ The messages which the methods use as parameters are defined earlier in
 the file. Consider for example the `GetUniverseInfo`
 [method](https://github.com/brunchboy/ola-clojure/blob/master/resources/proto/Ola.proto#L385):
 
-```proto
+```protobuf
 rpc GetUniverseInfo (OptionalUniverseRequest) returns (UniverseInfoReply);
 ```
 
