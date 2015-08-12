@@ -65,7 +65,12 @@ the file. Consider for example the `GetUniverseInfo`
 [method](https://github.com/brunchboy/ola-clojure/blob/master/resources/proto/Ola.proto#L385):
 
 ```protobuf
-rpc GetUniverseInfo (OptionalUniverseRequest) returns (UniverseInfoReply);
+// RPCs handled by the OLA Server
+service OlaServerService {
+  // ...
+  rpc GetUniverseInfo (OptionalUniverseRequest) returns (UniverseInfoReply);
+  // ...
+}
 ```
 
 The request message, `OptionalUniverseRequest` is specified
