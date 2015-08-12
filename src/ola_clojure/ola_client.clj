@@ -1,8 +1,8 @@
 (ns ola-clojure.ola-client
   "Interface to the automatically generated protocol buffer
   communication classes which communicate with the Open Lighting
-  Architecture olad daemon."
-  (:require [flatland.protobuf.core :refer :all]
+  Architecture daemon, olad."
+  (:require [flatland.protobuf.core :refer [protobuf protobuf-load protobuf-dump]]
             [clojure.java.io :as io]
             [clojure.core.cache :as cache]
             [clojure.core.async :refer [chan go go-loop <! >!! close!]]
@@ -14,8 +14,6 @@
            [java.io InputStream]
            [flatland.protobuf PersistentProtocolBufferMap]
            [com.google.protobuf ByteString]))
-
-(timbre/refer-timbre)
 
 ;; Values needed to construct proper protocol headers for communicating with OLA server
 (def ^:private protocol-version 1)
@@ -57,17 +55,6 @@
   channel 
   (atom nil))
 
-(defonce ^:private ^{:doc "If the last attempt to send a message to
-  the OLA server failed, this will contain a description of the problem."}
-  last-failure
-  (atom nil))
-
-(defn failure-description
-  "If the last attempt to communicate with the OLA daemon failed,
-  returns a description of the problem, otherwise returns nil."
-  []
-  @last-failure)
-
 (defn- next-request-id
   "Assign the sequence number for a new request, wrapping at the
   protocol limit. Will be safe because it will take far longer than an
@@ -85,7 +72,7 @@
     (try
       (.close (:socket conn))
       (catch Exception e
-        (info e "Issue closing OLA server socket"))))
+        (timbre/info e "Issue closing OLA server socket"))))
   nil)
 
 (defn- connect-server
@@ -107,15 +94,13 @@
               out (io/output-stream sock)]
           {:socket sock :in in :out out})
         (catch Exception e
-          (warn e "Problem opening olad server streams; discarding connection")
+          (timbre/warn e "Problem opening olad server streams; discarding connection")
           (try
             (.close sock)
             (catch Exception e
-              (info e "Further exception trying to clean up failed olad connection"))))))
+              (timbre/info e "Further exception trying to clean up failed olad connection"))))))
     (catch Exception e
-      (reset! last-failure {:description "Unable to connect to olad server, is it running?"
-                            :cause (str (root-cause e))})
-      (warn e "Unable to connect to olad server, is it running?"))))
+      (timbre/warn e "Unable to connect to olad server, is it running?"))))
 
 (defn- build-header
   "Calculates the correct 4-byte header value for an OLA request of
@@ -145,34 +130,32 @@
 (defn- write-safely-internal
   "Recursive portion of write-safely, try to write a message to the
   olad server, reopen connection and recur if that fails and it is the
-  first failure."
-  ([^bytes header ^bytes message ^Boolean first-try ^clojure.lang.Atom connection]
-   ;; Combine the header and message into a single write, for important throughput reasons, as documented
-   ;; at http://docs.openlighting.org/ola/doc/latest/rpc_system.html#sec_RPCHeader
-   (let [combined (byte-array (+ (count header) (count message)))]
-      (System/arraycopy header 0 combined 0 (count header))
-      (System/arraycopy message 0 combined (count header) (count message))
-      (write-safely-internal combined first-try connection)))
-  ([^bytes header-and-message ^Boolean first-try  ^clojure.lang.Atom connection]
-   (try
-     (.write (:out @connection) header-and-message)
-     (try
-       (.flush (:out @connection))
-       (reset! last-failure nil)
-       (catch Exception e
-         (warn e "Problem flushing message to olad server; not retrying.")))
-     (catch Exception e
-       (warn e "Problem writing message to olad server")
-       (when first-try
-         (info "Reopening connection and retrying...")
-         (swap! connection connect-server)
-         (write-safely-internal header-and-message false connection))))))
+  first failure. Returns true if writing was successful."
+  [^bytes header-and-message ^Boolean first-try  ^clojure.lang.Atom connection]
+  (try
+    (.write (:out @connection) header-and-message)
+    (try
+      (.flush (:out @connection))
+      true
+      (catch Exception e
+        (timbre/warn e "Problem flushing message to olad server; not retrying.")))
+    (catch Exception e
+      (timbre/warn e "Problem writing message to olad server")
+      (when first-try
+        (timbre/info "Reopening connection and retrying...")
+        (swap! connection connect-server)
+        (write-safely-internal header-and-message false connection)))))
 
 (defn- write-safely
   "Try to write a message to the olad server, reopen connection and
-  retry once if that failed."
+  retry once if that failed. Returns true if writing swas successful."
   [^bytes header ^bytes message ^clojure.lang.Atom connection]
-  (write-safely-internal header message true connection))
+  ;; Combine the header and message into a single write, for important throughput reasons, as documented
+  ;; at http://docs.openlighting.org/ola/doc/latest/rpc_system.html#sec_RPCHeader
+  (let [combined (byte-array (+ (count header) (count message)))]
+    (System/arraycopy header 0 combined 0 (count header))
+    (System/arraycopy message 0 combined (count header) (count message))
+    (write-safely-internal combined true connection)))
 
 (defn- store-handler
   "Record a handler in the cache so it will be ready to call when the
@@ -181,7 +164,7 @@
   (if (cache/has? @request-cache request-id)
     (do
       (swap! request-cache #(cache/hit % request-id))
-      (warn "Collision for request id" request-id))
+      (timbre/warn "Collision for request id" request-id))
     (swap! request-cache #(cache/miss % request-id {:response-type response-type :handler handler}))))
 
 (defn- find-handler
@@ -194,15 +177,35 @@
 
 (defn- handle-response
   "Look up the handler associated with an OLA server response and call
-  it on a new thread."
+  it with the RPC response."
   [wrapper request-cache]
-  (if-let [handler-entry (find-handler (:id wrapper) request-cache)]
-    (let [response-length (.size (:buffer wrapper))
-          response-buffer (.asReadOnlyByteBuffer (:buffer wrapper))
-          response-bytes (byte-array response-length)]
-      (.get response-buffer response-bytes)
-      (future ((:handler handler-entry) (protobuf-load (:response-type handler-entry) response-bytes))))
-    (warn "Cannot find handler for response, too old?" wrapper)))
+  (try
+    (if-let [handler-entry (find-handler (:id wrapper) request-cache)]
+      (let [response-length (.size (:buffer wrapper))
+            response-buffer (.asReadOnlyByteBuffer (:buffer wrapper))
+            response-bytes (byte-array response-length)]
+        (.get response-buffer response-bytes)
+        (when-let [handler (:handler handler-entry)]
+          (handler {:response (protobuf-load (:response-type handler-entry) response-bytes)}))
+        (timbre/warn "Cannot find handler for response, too old?" wrapper)))
+    (catch Throwable t
+      (timbre/error t "Problem delivering OLA response to handler"))))
+
+(defn- handle-failure
+  "Look up the handler associated with an OLA server response and call
+  it with an error description and possibly throwable. Can also be
+  called with the three argument arity if the handler is already
+  known, to simply deliver the failure information."
+  ([wrapper request-cache message thrown]
+   (if-let [handler-entry (find-handler (:id wrapper) request-cache)]
+     (handle-failure (:handler handler-entry) message thrown)
+     (timbre/warn "Cannot find handler for response, too old?" wrapper)))
+  ([handler message thrown]
+   (when handler
+     (try
+       (handler (merge {:failed message} (when thrown {:thrown thrown})))
+       (catch Throwable t
+         (timbre/error "Problem delivering RPC failure to handler"))))))
 
 (defn- channel-loop
   "Reads from the internal request channel until it closes, formatting
@@ -215,7 +218,6 @@
         header-bytes (byte-array 4)]
     (go
       (loop [request (<! channel)]
-        (debug "received request" request)
         (when-let [[name message response-type response-handler] request]
           (let [msg-bytes (ByteString/copyFrom (protobuf-dump message))
                 request-id (next-request-id request-counter)
@@ -227,7 +229,11 @@
               (.putInt (.intValue (build-header (count request-bytes))))
               (.flip)
               (.get header-bytes))
-            (write-safely header-bytes request-bytes connection))
+            (or
+              (write-safely header-bytes request-bytes connection)
+              (handle-failure request request-cache
+                              (str "Unable to write " name " message to OLA."
+                                   (when-not @connection " Is it running?")))))
           (recur (<! channel))))
       ;; The channel has been closed, so signal the main thread to shut down as well
       (swap! connection disconnect-server))))
@@ -245,9 +251,6 @@
         request-cache (atom (cache/ttl-cache-factory {} :ttl request-cache-ttl))
         header-bytes (byte-array 4)
         header-buffer (.order (ByteBuffer/allocate 4) (ByteOrder/nativeOrder))]
-
-    (debug "channel" channel "connection" connection)
-    
     (if @connection
       ;; Run core.async loop which takes requests on the internal channel and writes them to the OLA server socket
       (channel-loop channel connection request-cache)
@@ -269,27 +272,31 @@
             (if (= (:type wrapper) :RESPONSE)
               (handle-response wrapper request-cache)
               (if (= (:type wrapper) :RESPONSE_FAILED)
-                (do (reset! last-failure {:description "Unable to write to show universe. Does it exist in OLA?"
-                                          :cause "OLA RpcMessage RESPONSE_FAILED"})
-                    (warn "Unable to write to show universe. Does it exist in OLA?"))
-                (do (reset! last-failure {:description "Unknown problem writing control values to OLA daemon."
-                                          :cause (str "Unrecognized OLA RpcMessage type: " (:type wrapper))})
-                  (warn "Ignoring unrecognized response type:" wrapper))))))
+                (let [error-length (.size (:buffer wrapper))
+                      error-buffer (.asReadOnlyByteBuffer (:buffer wrapper))
+                      error-bytes (byte-array error-length)]
+                  (.get error-buffer error-bytes)
+                  (let [error-message (str "OLA RpcMessage failed: " (String. error-bytes "UTF-8"))]
+                    (handle-failure wrapper request-cache error-message nil)
+                    (timbre/warn error-message)))
+                (do (handle-failure wrapper request-cache
+                                    (str "Unrecognized OLA RpcMessage type: " (:type wrapper)) nil)
+                    (timbre/warn "Unrecognized OLA RpcMesssage response:" wrapper))))))
         (catch Exception e
           (when @connection
-            (warn e "Problem reading from olad, trying to reconnect...")
+            (timbre/warn e "Problem reading from olad, trying to reconnect...")
             (swap! connection connect-server)
             (when-not @connection
-              (error "Unable to reconnect to OLA server, shutting down ola_client")
+              (timbre/error "Unable to reconnect to OLA server, shutting down ola_client")
               (shutdown))))))
-    (info "OLA request processor terminating.")
+    (timbre/info "OLA request processor terminating.")
     (shutdown)))
 
 (defn- create-channel
   [old-channel]
   (or old-channel
       (let [c (chan)]
-        (info "Created OLA request processor.")
+        (timbre/info "Created OLA request processor.")
         (future (process-requests c))
         c)))
 
@@ -312,7 +319,31 @@
   (swap! channel destroy-channel))
 
 (defn send-request
-  "Send a request to the OLA server."
+  "Send a request to the OLA server. You will generally not call this
+  directly; instead, you will use one of the automatically generated
+  RPC functions that does the work of marshaling the request
+  parameters into the proper Protobuf object an then calls this on
+  your behalf.
+
+  `name` is the name of the OLA RPC method to be invoked. `message` is
+  a Protobuf object of the correct type to contain the arguments of
+  the specified OLA RPC method. `response-type` is the Protobuf type
+  that a successful response will contain. `response-handler` is the
+  function to be called when a response is received.
+
+  The response handler is called with a single map as its argument. If
+  the RPC was successful, the map will contain a single key
+  `:response` whose value holds a map expanded from the Protobuf
+  response object.
+
+  If the RPC failed, the map will contain the key `:failed`, and its
+  value will be a string describing the failure. If the failure
+  resulted from an `Exception` or other `Throwable`, the map will also
+  contain that, under the key `:thrown`.
+
+  If `response-handler` is `nil`, no callback will be performed to
+  report the result of the RPC attempt."
+  {:doc/format :markdown}
   [name message response-type response-handler]
   (start)
   (>!! @channel [name message response-type response-handler]))
