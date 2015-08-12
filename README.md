@@ -152,7 +152,7 @@ optional parameter identifying a specific universe of interest. To
 pass parameters using `ola-clojure`, you simply supply a normal
 Clojure map with keys and values corresponding to the message
 definitions within the Protobuf specification. In this case, the
-pareamteter is named `universe` and takes an integer, so the following
+parameter is named `universe` and takes an integer, so the following
 variant would return the same result as above in the current
 configuration, but would select just that universe if there were more
 than one configured:
@@ -313,7 +313,8 @@ universes:
 
 ```clojure
 (let [levels (get buffers universe)]
-  (ola/UpdateDmxData {:universe universe :data (ByteString/copyFrom levels)} response-handler))
+  (ola/UpdateDmxData {:universe universe :data (ByteString/copyFrom levels)}
+                     response-handler))
 ```
 
 In this example, `universe` contains the ID of a universe that the
