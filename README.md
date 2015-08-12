@@ -32,7 +32,8 @@ either the response or a failure indication.
 This means that in the most common configuration, of talking to `olad`
 on the default port `9010` on the local machine, you need to write
 almost no code. But you can also configure ola-clojure to talk to
-other ports and other machines, as described below.
+other ports and other machines, as described
+[below](#connection-configuration).
 
 ## Usage
 
@@ -59,11 +60,11 @@ And you are ready to invoke methods in `olad`. The methods which are
 exported by `ola-service` are parsed from the `OlaServerService`
 section of
 [Ola.proto](https://github.com/brunchboy/ola-clojure/blob/master/resources/proto/Ola.proto#L374-L402).
-The messages which the methods use as paramters are defined earlier in
+The messages which the methods use as parameters are defined earlier in
 the file. Consider for example the `GetUniverseInfo`
 [method](https://github.com/brunchboy/ola-clojure/blob/master/resources/proto/Ola.proto#L385):
 
-```protobuf
+```proto
 rpc GetUniverseInfo (OptionalUniverseRequest) returns (UniverseInfoReply);
 ```
 
@@ -151,7 +152,8 @@ In addition to the result map printed by our callback function, you
 will see a different line of output:
 
 ```
-15-Aug-12 10:34:02 alacrity.singlewire.lan WARN [ola-clojure.ola-client] - OLA RpcMessage failed: Universe doesn't exist
+15-Aug-12 10:34:02 alacrity.local WARN [ola-clojure.ola-client] -
+                   OLA RpcMessage failed: Universe doesn't exist
 ```
 
 This comes from the logging mechanism used by ola-clojure. See
