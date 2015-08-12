@@ -328,7 +328,7 @@ specification which creates the wrapper functions, will hopefully
 enable you to figure out how to send whatever messages you need to
 `olad`.
  
- ### Connection Configuration
+### Connection Configuration
 
 If you need to talk to `olad` on a different port or address, you can
 do so by configuring the
