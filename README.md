@@ -123,7 +123,31 @@ beginning. But once you do, you will see something like this:
 > If you are sending a "fire and forget" message and you don't care
 > about the result, you can pass `nil` for your callback function.
 
-As seen in its specification above, the `GetUniverseInfo` takes an
+This is exactly what we would expect from looking at the
+[specifications](https://github.com/brunchboy/ola-clojure/blob/master/resources/proto/Ola.proto#L257-L275)
+of the reply message:
+
+```protobuf
+message UniverseInfo {
+  required int32 universe = 1;
+  required string name = 2;
+  required MergeMode merge_mode = 3;
+  required int32 input_port_count = 4;
+  required int32 output_port_count = 5;
+  required int32 rdm_devices = 6;
+  repeated PortInfo input_ports = 7;
+  repeated PortInfo output_ports = 8;
+}
+ 
+message UniverseInfoReply {
+  repeated UniverseInfo universe = 1;
+}
+```
+
+In the response, the Protocol Buffer structures have all been expanded
+into ordinary Clojure data structures for convenient access.
+
+As we saw in its specification above, the `GetUniverseInfo` takes an
 optional parameter identifying a specific universe of interest. To
 pass parameters using `ola-clojure`, you simply supply a normal
 Clojure map with keys and values corresponding to the message
@@ -164,6 +188,122 @@ will see a different line of output:
 This comes from the logging mechanism used by ola-clojure. See
 [below](#logging-configuration) for information about how that can be
 configured.
+
+Other methods work in the same way, like
+[GetPlugins](https://github.com/brunchboy/ola-clojure/blob/master/resources/proto/Ola.proto#L376):
+
+```clojure
+(ola/GetPlugins #(clojure.pprint/pprint %))
+```
+
+```clojure
+{:response
+ {:plugin
+  [{:plugin_id 1, :name "Dummy", :active true, :enabled true}
+   {:plugin_id 2, :name "ArtNet", :active true, :enabled true}
+   {:plugin_id 3, :name "ShowNet", :active true, :enabled true}
+   {:plugin_id 4, :name "ESP Net", :active true, :enabled true}
+   {:plugin_id 5, :name "Serial USB", :active true, :enabled true}
+   {:plugin_id 6, :name "Enttec Open DMX", :active true, :enabled true}
+   {:plugin_id 7, :name "SandNet", :active false, :enabled false}
+   {:plugin_id 8, :name "StageProfi", :active false, :enabled false}
+   {:plugin_id 9, :name "Pathport", :active true, :enabled true}
+   {:plugin_id 11, :name "E1.31 (sACN)", :active true, :enabled true}
+   {:plugin_id 12, :name "USB", :active true, :enabled true}
+   {:plugin_id 14, :name "OSC", :active true, :enabled true}
+   {:plugin_id 16, :name "KiNET", :active true, :enabled true}
+   {:plugin_id 17, :name "KarateLight", :active false, :enabled false}
+   {:plugin_id 18,
+    :name "Milford Instruments",
+    :active false,
+    :enabled false}
+   {:plugin_id 19, :name "Renard", :active true, :enabled true}
+   {:plugin_id 21,
+    :name "Open Pixel Control",
+    :active true,
+    :enabled true}
+   {:plugin_id 22, :name "GPIO", :active true, :enabled true}]}}
+```
+
+Or, extracting and just printing part of the response to
+[GetPluginDescription](https://github.com/brunchboy/ola-clojure/blob/master/resources/proto/Ola.proto#L378-L379):
+
+```clojure
+(ola/GetPluginDescription {:plugin_id 2} #(print (get-in % [:response :description])))
+```
+
+```
+ArtNet Plugin
+----------------------------
+ 
+This plugin creates a single device with four input and four output 
+ports and supports ArtNet, ArtNet 2 and ArtNet 3.
+ 
+ArtNet limits a single device (identified by a unique IP) to four
+input and four output ports, each bound to a separate ArtNet Port
+Address (see the ArtNet spec for more details). The ArtNet Port
+Address is a 16 bits int, defined as follows: 
+ 
+ Bit 15 | Bits 14 - 8 | Bits 7 - 4 | Bits 3 - 0
+ 0      |   Net       | Sub-Net    | Universe
+ 
+For OLA, the Net and Sub-Net values can be controlled by the config
+file. The Universe bits are the OLA Universe number modulo 16.
+ 
+ ArtNet Net | ArtNet Subnet | OLA Universe | ArtNet Port Address
+ 0          | 0             | 0            | 0
+ 0          | 0             | 1            | 1
+ 0          | 0             | 15           | 15
+ 0          | 0             | 16           | 0
+ 0          | 0             | 17           | 1
+ 0          | 1             | 0            | 16
+ 0          | 1             | 1            | 17
+ 0          | 15            | 0            | 240
+ 0          | 15            | 15           | 255
+ 1          | 0             | 0            | 256
+ 1          | 0             | 1            | 257
+ 1          | 0             | 15           | 271
+ 1          | 1             | 0            | 272
+ 1          | 15            | 0            | 496
+ 1          | 15            | 15           | 511
+ 
+That is Port Address = (Net << 8) + (Subnet << 4) + (Universe % 4)
+ 
+--- Config file : ola-artnet.conf ---
+ 
+always_broadcast = [true|false]
+Use ArtNet v1 and always broadcast the DMX data. Turn this on if
+you have devices that don't respond to ArtPoll messages.
+ 
+ip = [a.b.c.d|<interface_name>]
+The ip address or interface name to bind to. If not specified it will
+use the first non-loopback interface.
+ 
+long_name = ola - ArtNet node
+The long name of the node.
+ 
+net = 0
+The ArtNet Net to use (0-127).
+ 
+output_ports = 4
+The number of output ports (Send ArtNet) to create. Only the first 4
+will appear in ArtPoll messages
+ 
+short_name = ola - ArtNet node
+The short name of the node (first 17 chars will be used).
+ 
+subnet = 0
+The ArtNet subnet to use (0-15).
+ 
+use_limited_broadcast = [true|false]
+When broadcasting, use the limited broadcast address (255.255.255.255)
+rather than the subnet directed broadcast address. Some devices which 
+don't follow the ArtNet spec require this.
+ 
+use_loopback = [true|false]
+Enable use of the loopback device.
+```
+
 
 ### Connection Configuration
 
