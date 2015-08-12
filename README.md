@@ -5,6 +5,8 @@ src="doc/assets/ola-clojure-padded-left.png"> A
 [Clojure](http://clojure.org) library for communicating with the
 [Open Lighting Architecture](https://www.openlighting.org/ola/).
 
+[![License](https://img.shields.io/github/license/brunchboy/ola-clojure.svg)](#license)
+
 [Protocol Buffers](https://developers.google.com/protocol-buffers/docs/overview)
 are used to efficiently communicate with the `olad` daemon via its
 [RPC Service](https://docs.openlighting.org/doc/latest/rpc_system.html).
