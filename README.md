@@ -49,7 +49,7 @@ other ports and other machines, as described
 2. Set up a Clojure project using [Leiningen](http://leiningen.org) or [Boot](https://github.com/boot-clj/boot#boot--).
 
 3. Add this project as a dependency:
-   [![Clojars Project](https://clojars.org/ola-clojure/latest-version.svg)](https://clojars.org/ola-clojure)
+   [![Clojars Project](https://img.shields.io/clojars/v/prismic.svg)](https://clojars.org/ola-clojure)
 
 4. In the namespace from which you want to communinicate with `olad`,
    add this to the `:require` section of the `ns` form:
