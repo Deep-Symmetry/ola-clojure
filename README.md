@@ -425,7 +425,6 @@ can be found in
 [doc/epl-v10.html](https://cdn.rawgit.com/brunchboy/ola-clojure/master/doc/epl-v10.html)
 within this project.
 
-The OLA RPC Protobuf specification files, like the rest of the Open
-Lighting Architecture, are distributed under the GNU Lesser General
-Public License,
+The OLA RPC Protobuf specification files are distributed under the GNU
+Lesser General Public License,
 [version 2.1](http://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html).
