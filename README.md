@@ -376,9 +376,10 @@ changing the `olad-host` value, this means that the communication will
 be much slower than talking to a local process. Because of that, you
 will almost certainly want to tell ola-client to change from using the
 unbuffered channel that it normally uses to gather messages you want
-to send to the OLA server, and which will block your code if you ever
+to send to the OLA server. This default channel will block if you ever
 try to send a second message while the first one is still being
-written to the network. To do that, you call `use-buffered-channel`:
+written to the network. To use a channel with a buffer, you call
+`use-buffered-channel`:
 
 ```clojure
 (ola-client/use-buffered-channel)
@@ -424,7 +425,9 @@ like, as described in its
 
 This has been used without any changes since the beginning of the
 Afterglow project, although it was only recently separated into its
-own project, and cleaned up slightly in the process.
+own project, and cleaned up slightly in the process. More recently,
+support for buffered channels was added, to help people who want to
+talk to OLA from Windows, where it can't run as a local process.
 
 ## Bugs
 
