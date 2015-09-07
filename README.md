@@ -363,12 +363,37 @@ If you need to talk to `olad` on a different port or address, you can
 do so by configuring the
 [ola-client](https://github.com/brunchboy/ola-clojure/blob/master/src/ola_clojure/ola_client.clj)
 namespace which manages the connection on behalf of the RPC wrapper
-functions:
+functions, before the connection is established:
 
 ```clojure
 (require '[ola-clojure.ola-client :as ola-client])
 (reset! ola-client/olad-host "172.30.246.32")
 (reset! ola-client/olad-port 9200)
+```
+
+If you do need to talk to an OLA server on a different machine, by
+changing the `olad-host` value, this means that the communication will
+be much slower than talking to a local process. Because of that, you
+will almost certainly want to tell ola-client to change from using the
+unbuffered channel that it normally uses to gather messages you want
+to send to the OLA server, and which will block your code if you ever
+try to send a second message while the first one is still being
+written to the network. To do that, you call `use-buffered-channel`:
+
+```clojure
+(ola-client/use-buffered-channel)
+```
+
+Again, this needs to be done before communication with the OLA server
+has begun. The default buffer size holds 32 messages, and if it fills
+up because the network is unable to keep up with the rate at which you
+are trying to send messages, older messages will be discarded. This is
+probably plenty large a buffer, and will not cause message loss under
+normal circumstances, but you can specify a different buffer size by
+giving an argument to `use-buffered-channel`:
+
+```clojure
+(ola-client/use-buffered-channel 48)
 ```
 
 The `ola-client` namespace also provides a `shutdown` function which
@@ -377,6 +402,10 @@ you can call if you ever want to explicitly close the `olad` connection:
 ```clojure
 (ola-client/shutdown)
 ```
+
+You can use this if you have changed your connection parameters after
+a connection was already established, and you want your new values to
+take effect.
 
 There is also a `start` function to open the connection again, but
 there is no real need to call this, as the RPC wrapper functions will

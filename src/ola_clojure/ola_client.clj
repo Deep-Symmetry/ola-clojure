@@ -5,7 +5,7 @@
   (:require [flatland.protobuf.core :refer [protobuf protobuf-load protobuf-dump]]
             [clojure.java.io :as io]
             [clojure.core.cache :as cache]
-            [clojure.core.async :refer [chan go go-loop <! <!! >!! close!]]
+            [clojure.core.async :refer [chan go go-loop <! <!! >!! close! sliding-buffer]]
             [clojure.stacktrace :refer [root-cause]]
             [ola-clojure.rpc-messages :refer [RpcMessage]]
             [taoensso.timbre :as timbre])
@@ -32,6 +32,18 @@
   If you are on Windows, and so need to run OLA on a different machine,
   set this atom to the name or IP address of the machine running olad."}
   (atom "localhost"))
+
+(defonce ^:private channel-creator
+  ^{:doc "The function which is called to create the communication
+  channel used to accept protocol buffers to be sent to the OLA
+  server. The default implementation creates an unbuffered channel,
+  which is fine for the default case of communicating with a local OLA
+  server. If you need to talk to a remote server over the newtork, you
+  should probably change this to a buffered channel, which the function
+  use-buffered-channel will do for you."}
+  (atom (fn []
+          (timbre/info "Creating OLA request processor with unbuffered channel.")
+          (chan))))
 
 (def ^:private
   socket-timeout
@@ -209,9 +221,7 @@
 
 (defn- channel-loop
   "Reads from the internal request channel until it closes, formatting
-  messages to be sent to the OLA server socket. Can be run on an
-  unbuffered core.async channel because this is fast, local async
-  I/O."
+  messages to be sent to the OLA server socket."
   [channel connection request-cache]
   (let [request-counter (atom 0)
         header-buffer (.order (ByteBuffer/allocate 4) (ByteOrder/nativeOrder))
@@ -299,8 +309,7 @@
 (defn- create-channel
   [old-channel]
   (or old-channel
-      (let [c (chan)]
-        (timbre/info "Created OLA request processor.")
+      (let [c (@channel-creator)]
         (future (process-requests c))
         c)))
 
@@ -309,6 +318,24 @@
   (when c
     (close! c))
   nil)
+
+(defn use-buffered-channel
+  "Change the mechanism used to accept protocol buffers for sending to
+  the OLA server from an unbuffered channel (which is fine for the
+  default case of fast, local communication with an OLA server running
+  on localhost) to a buffered channel for when you need to communicate
+  over the network to an OLA server on a different machine. A sliding
+  buffer is used so that older messages will eventually be discarded
+  if the network simply can't keep up. The default buffer size is 32
+  messages, which will probably be more than enough, but you can
+  adjust this by passing a buffer size as an argument."
+  ([]
+   (use-buffered-channel 32))
+  ([buffer-size]
+   (reset! channel-creator (fn []
+                             (timbre/info (str "Creating OLA request processor with sliding buffered channel, size "
+                                               buffer-size "."))
+                             (chan (sliding-buffer buffer-size))))))
 
 (defn start
   "Explicitly start event handling thread and OLA server connection;
