@@ -1,11 +1,10 @@
 # ola-clojure
 
-<image align="right" width="275"
-src="doc/assets/ola-clojure-padded-left.png"> A
+[![Join the chat at https://gitter.im/brunchboy/afterglow](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/brunchboy/afterglow?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) <image align="right" width="275"
+src="doc/assets/ola-clojure-padded-left.png"><br/><br/>
+A
 [Clojure](http://clojure.org) library for communicating with the
 [Open Lighting Architecture](https://www.openlighting.org/ola/).
-
-[![License](https://img.shields.io/github/license/brunchboy/ola-clojure.svg)](#license)
 
 [Protocol Buffers](https://developers.google.com/protocol-buffers/docs/overview)
 are used to efficiently communicate with the `olad` daemon via its
@@ -15,6 +14,8 @@ This project was extracted from
 [Afterglow](https://github.com/brunchboy/afterglow#afterglow), so that
 other Clojure projects could communicate with OLA without having to
 pull in all of Afterglow.
+
+[![License](https://img.shields.io/github/license/brunchboy/ola-clojure.svg)](#license)
 
 ### Overview
 
