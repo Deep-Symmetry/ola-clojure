@@ -1,13 +1,13 @@
-(defproject ola-clojure "0.1.2"
+(defproject ola-clojure "0.1.3-SNAPSHOT"
   :description "A Clojure library for communicating with the Open Lighting Architecture."
   :url "https://github.com/brunchboy/ola-clojure"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.7.0"]
                  [org.clojure/core.cache "0.6.4"]
-                 [org.clojure/core.async "0.2.371"]
+                 [org.clojure/core.async "0.2.374"]
                  [org.clojars.brunchboy/protobuf "0.8.3"]
-                 [selmer "0.9.4"]
+                 [selmer "0.9.5"]
                  [com.taoensso/timbre "4.1.4"]]
   :source-paths ["src" "generated"]
   :prep-tasks [["with-profile" "+gen,+dev" "run" "-m" "ola-clojure.src-generator"] "protobuf" "javac" "compile"]
