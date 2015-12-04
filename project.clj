@@ -7,7 +7,8 @@
                  [org.clojure/core.cache "0.6.4"]
                  [org.clojure/core.async "0.2.374"]
                  [org.clojars.brunchboy/protobuf "0.8.3"]
-                 [selmer "0.9.5"]
+                 [selmer "0.9.5"
+                  :exclusions [com.google.protobuf/protobuf-java]]
                  [com.taoensso/timbre "4.1.4"]]
   :source-paths ["src" "generated"]
   :prep-tasks [["with-profile" "+gen,+dev" "run" "-m" "ola-clojure.src-generator"] "protobuf" "javac" "compile"]
@@ -19,7 +20,8 @@
                    :env {:dev true}}
 
              :gen {:prep-tasks ^:replace ["protobuf" "javac" "compile"]}}
-  :plugins [[org.clojars.brunchboy/lein-protobuf "0.4.3" :exclusions [leinjacker]]
+  :plugins [[org.clojars.brunchboy/lein-protobuf "0.4.3"
+             :exclusions [leinjacker]]
             [codox "0.8.13"]
             [lein-ancient "0.6.7"]]
 
