@@ -3,7 +3,7 @@
   :url "https://github.com/brunchboy/ola-clojure"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.7.0"]
+  :dependencies [[org.clojure/clojure "1.8.0-RC3"]
                  [org.clojure/core.cache "0.6.4"]
                  [org.clojure/core.async "0.2.374"]
                  [org.clojars.brunchboy/protobuf "0.8.3"]
