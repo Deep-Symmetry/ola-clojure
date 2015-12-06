@@ -374,7 +374,6 @@
 
   If `response-handler` is `nil`, no callback will be performed to
   report the result of the RPC attempt."
-  {:doc/format :markdown}
   [name message response-type response-handler]
   (start)
   (>!! @channel [name message response-type response-handler]))

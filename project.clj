@@ -22,11 +22,11 @@
              :gen {:prep-tasks ^:replace ["protobuf" "javac" "compile"]}}
   :plugins [[org.clojars.brunchboy/lein-protobuf "0.4.3"
              :exclusions [leinjacker]]
-            [codox "0.8.13"]]
+            [lein-codox "0.9.0"]]
 
   :aliases {"gen" ["with-profile" "+gen,+dev" "run" "-m" "ola-clojure.src-generator"]}
 
-  :codox {:src-dir-uri "http://github.com/brunchboy/ola-clojure/blob/master/"
-          :src-linenum-anchor-prefix "L"
-          :output-dir "target/doc"}
+  :codox {:source-uri "http://github.com/brunchboy/ola-clojure/blob/master/{filepath}#L{line}"
+          :output-path "target/doc"
+          :metadata {:doc/format :markdown}}
   :min-lein-version "2.0.0")
