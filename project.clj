@@ -22,8 +22,7 @@
              :gen {:prep-tasks ^:replace ["protobuf" "javac" "compile"]}}
   :plugins [[org.clojars.brunchboy/lein-protobuf "0.4.3"
              :exclusions [leinjacker]]
-            [codox "0.8.13"]
-            [lein-ancient "0.6.7"]]
+            [codox "0.8.13"]]
 
   :aliases {"gen" ["with-profile" "+gen,+dev" "run" "-m" "ola-clojure.src-generator"]}
 
