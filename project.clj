@@ -1,4 +1,4 @@
-(defproject ola-clojure "0.1.6-SNAPSHOT"
+(defproject ola-clojure "0.1.6"
   :description "A Clojure library for communicating with the Open Lighting Architecture."
   :url "https://github.com/brunchboy/ola-clojure"
   :license {:name "Eclipse Public License"
