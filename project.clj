@@ -9,7 +9,7 @@
                  [org.clojars.brunchboy/protobuf "0.8.3"]
                  [selmer "1.0.7"
                   :exclusions [com.google.protobuf/protobuf-java]]
-                 [com.taoensso/timbre "4.6.0"]]
+                 [com.taoensso/timbre "4.7.4"]]
   :source-paths ["src" "generated"]
   :prep-tasks [["with-profile" "+gen,+dev" "run" "-m" "ola-clojure.src-generator"] "protobuf" "javac" "compile"]
 
