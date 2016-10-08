@@ -7,8 +7,7 @@
                  [org.clojure/core.cache "0.6.5"]
                  [org.clojure/core.async "0.2.391"]
                  [org.clojars.brunchboy/protobuf "0.8.3"]
-                 [selmer "1.0.9"
-                  :exclusions [com.google.protobuf/protobuf-java]]
+                 [selmer "1.10.0" :exclusions [com.google.protobuf/protobuf-java]]
                  [com.taoensso/timbre "4.7.4"]]
   :source-paths ["src" "generated"]
   :prep-tasks [["with-profile" "+gen,+dev" "run" "-m" "ola-clojure.src-generator"] "protobuf" "javac" "compile"]
