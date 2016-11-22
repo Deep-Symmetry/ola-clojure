@@ -5,7 +5,7 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.clojure/core.cache "0.6.5"]
-                 [org.clojure/core.async "0.2.391"]
+                 [org.clojure/core.async "0.2.395"]
                  [org.clojars.brunchboy/protobuf "0.8.3"]
                  [selmer "1.10.0" :exclusions [com.google.protobuf/protobuf-java]]
                  [com.taoensso/timbre "4.7.4"]]
