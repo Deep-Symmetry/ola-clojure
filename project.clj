@@ -5,10 +5,10 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.clojure/core.cache "0.6.5"]
-                 [org.clojure/core.async "0.2.395"]
+                 [org.clojure/core.async "0.3.442"]
                  [org.clojars.brunchboy/protobuf "0.8.3"]
-                 [selmer "1.10.0" :exclusions [com.google.protobuf/protobuf-java]]
-                 [com.taoensso/timbre "4.7.4"]]
+                 [selmer "1.10.6" :exclusions [com.google.protobuf/protobuf-java]]
+                 [com.taoensso/timbre "4.8.0"]]
   :source-paths ["src" "generated"]
   :prep-tasks [["with-profile" "+gen,+dev" "run" "-m" "ola-clojure.src-generator"] "protobuf" "javac" "compile"]
 
