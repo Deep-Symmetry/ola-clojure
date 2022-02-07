@@ -182,7 +182,7 @@ message UniverseInfo {
   repeated PortInfo input_ports = 7;
   repeated PortInfo output_ports = 8;
 }
- 
+
 message UniverseInfoReply {
   repeated UniverseInfo universe = 1;
 }
@@ -299,8 +299,8 @@ response to
 ```
 Serial USB Plugin
 ----------------------------
- 
-This plugin supports DMX USB devices that emulate a serial port. This 
+
+This plugin supports DMX USB devices that emulate a serial port. This
 includes:
  - Arduino RGB Mixer
  - DMX-TRI & RDM-TRI
@@ -308,29 +308,29 @@ includes:
  - DMXter4 & mini DMXter
  - Enttec DMX USB Pro
  - Robe Universe Interface
- 
+
 See http://opendmx.net/index.php/USB_Protocol_Extensions for more info.
- 
+
 --- Config file : ola-usbserial.conf ---
- 
+
 device_dir = /dev
 The directory to look for devices in.
- 
+
 device_prefix = ttyUSB
 The prefix of filenames to consider as devices. Multiple keys are allowed.
- 
+
 ignore_device = /dev/ttyUSB
 Ignore the device matching this string. Multiple keys are allowed.
- 
+
 pro_fps_limit = 190
 The max frames per second to send to a Usb Pro or DMXKing device.
- 
+
 tri_use_raw_rdm = [true|false]
 Bypass RDM handling in the {DMX,RDM}-TRI widgets.
- 
+
 ultra_fps_limit = 40
 The max frames per second to send to a Ultra DMX Pro device.
- 
+
 uucp_lock_path = /var/lock
 Path to check for UUCP Lock files.
 ```
@@ -357,7 +357,7 @@ These examples, combined with the
 specification which creates the wrapper functions, will hopefully
 enable you to figure out how to send whatever messages you need to
 `olad`.
- 
+
 ### Connection Configuration
 
 If you need to talk to `olad` on a different port or address, you can
@@ -446,7 +446,8 @@ encounter them!
 
 ## License
 
-<img align="right" alt="Deep Symmetry" src="doc/assets/DS-logo-bw-200-padded-left.png">
+<a href="http://deepsymmetry.org"><img align="right" alt="Deep Symmetry"
+ src="assets/DS-logo-github.png" width="250" height="150"></a>
 
 Copyright © 2015 [Deep Symmetry, LLC](http://deepsymmetry.org)
 
