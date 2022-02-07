@@ -447,7 +447,7 @@ encounter them!
 ## License
 
 <a href="http://deepsymmetry.org"><img align="right" alt="Deep Symmetry"
- src="assets/DS-logo-github.png" width="250" height="150"></a>
+ src="doc/assets/DS-logo-github.png" width="250" height="150"></a>
 
 Copyright © 2015 [Deep Symmetry, LLC](http://deepsymmetry.org)
 
