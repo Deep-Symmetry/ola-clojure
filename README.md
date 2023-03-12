@@ -1,6 +1,6 @@
 # ola-clojure
 
-[![Join the chat at https://gitter.im/brunchboy/afterglow](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/brunchboy/afterglow?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) <image align="right" width="275"
+[![project chat](https://img.shields.io/badge/chat-on%20zulip-brightgreen)](https://deep-symmetry.zulipchat.com/#narrow/stream/318697-afterglow) <image align="right" width="275"
 src="doc/assets/ola-clojure-padded-left.png"><br/><br/>
 A
 [Clojure](http://clojure.org) library for communicating with the
@@ -17,7 +17,7 @@ pull in all of Afterglow.
 
 [![License](https://img.shields.io/github/license/brunchboy/ola-clojure.svg)](#license)
 
-### Overview
+## Overview
 
 ola-clojure uses the
 [OLA RPC system](http://docs.openlighting.org/ola/doc/latest/rpc_system.html#sec_RPCHeader)
@@ -37,6 +37,20 @@ on the default port `9010` on the local machine, you need to write
 almost no code. But you can also configure ola-clojure to talk to
 other ports and other machines, as described
 [below](#connection-configuration).
+
+## Getting Help
+
+<a href="http://zulip.com"><img align="right" alt="Zulip logo"
+ src="doc/assets/zulip-icon-circle.svg"
+ width="128" height="128"></a>
+
+Deep Symmetry&rsquo;s projects are generously sponsored with hosting by <a
+href="https://zulip.com">Zulip</a>, an open-source modern team chat
+app designed to keep both live and asynchronous conversations
+organized. Thanks to them, you can <a
+href="https://deep-symmetry.zulipchat.com/#narrow/stream/318697-afterglow">chat
+with our community</a>, ask questions, get inspiration, and share your
+own ideas.
 
 ## Usage
 
